@@ -155,7 +155,9 @@ export default function index() {
       />
     </SafeAreaView>
   ) : (
-    <ActivityIndicator size="large" color="#0000ff" className="mt-10" />
+    <View className="w-full h-full flex items-center justify-center mb-80">
+      <ActivityIndicator size="200" color="#add8e6" />
+    </View>
   );
 }
 

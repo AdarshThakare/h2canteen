@@ -18,12 +18,17 @@ const url = "https://primebay-backend.onrender.com/api/v1/order/app/all";
 import { printToFileAsync } from "expo-print";
 import { shareAsync } from "expo-sharing";
 import ThermalPrinterModule from "react-native-thermal-printer";
+import {
+  BluetoothManager,
+  BluetoothEscposPrinter,
+} from "react-native-thermal-printer";
 
 const { width } = Dimensions.get("window");
 
 const Spacer = ({ height = 10 }) => <View style={{ height }} />;
 
 const App = () => {
+  const [device, setDevice] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -106,12 +111,86 @@ const App = () => {
           "[L]\n",
       });
 
-      // await ThermalPrinterModule.printBluetooth({
-      //   payload: "Hello World",
-      //   printerNbrCharactersPerLine: 38,
-      // });
+      await ThermalPrinterModule.printBluetooth({
+        payload: "Hello World",
+        printerNbrCharactersPerLine: 38,
+      });
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const connectToPrinter = async () => {
+    try {
+      // Enable Bluetooth
+      const isEnabled = await BluetoothManager.isBluetoothEnabled();
+      if (!isEnabled) {
+        await BluetoothManager.enableBluetooth();
+      }
+
+      // Scan for Bluetooth devices
+      const devices = await BluetoothManager.scanDevices();
+      console.log("Devices:", devices);
+
+      // Select a device (e.g., the first one from the paired list)
+      const selectedDevice = devices.pairedDevices[0];
+      if (!selectedDevice) {
+        Alert.alert("No devices found!");
+        return;
+      }
+
+      // Connect to the printer
+      await BluetoothManager.connect(selectedDevice.address);
+      setDevice(selectedDevice);
+      Alert.alert("Connected to", selectedDevice.name);
+    } catch (error) {
+      console.error("Error connecting to printer:", error);
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  const printBill = async () => {
+    if (!device) {
+      Alert.alert("Error", "No printer connected!");
+      return;
+    }
+
+    try {
+      // Print some text
+      await BluetoothEscposPrinter.printText("Hello, Thermal Printer!\n", {});
+      await BluetoothEscposPrinter.printText(
+        "--------------------------------\n",
+        {}
+      );
+      await BluetoothEscposPrinter.printText(
+        "Item          Qty    Price\n",
+        {}
+      );
+      await BluetoothEscposPrinter.printText(
+        "--------------------------------\n",
+        {}
+      );
+      await BluetoothEscposPrinter.printText(
+        "Apple         2      $3.00\n",
+        {}
+      );
+      await BluetoothEscposPrinter.printText(
+        "Banana        1      $1.50\n",
+        {}
+      );
+      await BluetoothEscposPrinter.printText(
+        "--------------------------------\n",
+        {}
+      );
+      await BluetoothEscposPrinter.printText(
+        "Total:              $4.50\n\n",
+        {}
+      );
+
+      Alert.alert("Printed Successfully");
+    } catch (error) {
+      console.error("Error printing:", error);
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -299,15 +378,12 @@ const App = () => {
             )}
             <View className="flex flex-row justify-center gap-5">
               <TouchableOpacity
-                onPress={generatePdf}
+                onPress={onPrinterPress}
                 style={styles.downloadButton}
               >
                 <Text style={styles.closeButtonText}>DOWNLOAD</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={onPrinterPress}
-                style={styles.printButton}
-              >
+              <TouchableOpacity onPress={printBill} style={styles.printButton}>
                 <Text style={styles.closeButtonText}>PRINT</Text>
               </TouchableOpacity>
             </View>
