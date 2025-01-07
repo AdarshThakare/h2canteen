@@ -286,7 +286,7 @@ const App = () => {
   };
 
   return (
-    <View className="w-full h-full bg-white justify-center items-center px-4">
+    <View className="w-full h-full bg-white justify-center items-center px-4 pt-3">
       <Text style={styles.heading}>O R D E R S</Text>
       <ScrollView horizontal>
         <View>

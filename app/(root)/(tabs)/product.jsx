@@ -9,15 +9,19 @@ import {
   Image,
   TextInput,
   Button,
+  Pressable,
 } from "react-native";
 
+import * as ImagePicker from "expo-image-picker";
 import icons from "../../../constants/icons";
+import { ActivityIndicator } from "react-native-web";
 
 const url = "https://primebay-backend.onrender.com/api/v1/product/latest";
 const Spacer = ({ height = 10 }) => <View style={{ height }} />;
 
 const addurl = "https://primebay-backend.onrender.com/api/v1/product/app/new";
 const ProductTable = () => {
+  //states
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProductIndex, setSelectedProductIndex] = useState(null);
 
@@ -25,7 +29,13 @@ const ProductTable = () => {
   const [photos, setPhotos] = useState("");
   const [editedProduct, setEditedProduct] = useState({});
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [addImageModalVisible, setAddImageModalVisible] = useState(false);
 
+  //image states
+  const [image, setImage] = useState(null); // Store the selected image URI
+  const [uploading, setUploading] = useState(false); // Track upload status
+
+  //getAllProducts
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -40,6 +50,77 @@ const ProductTable = () => {
     };
     fetchData();
   }, [photos]);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Denied",
+        "You need to grant permissions to upload images."
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"], // Images only
+      allowsEditing: true, // Allow user to crop the image
+      selectionLimit: 5,
+      quality: 1, // High-quality image
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri); // Save the image URI
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!image) {
+      Alert.alert("No Image Selected", "Please select an image to upload.");
+      return;
+    }
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: image,
+      name: "photo.jpg", // File name
+      type: "image/jpeg", // MIME type
+    });
+
+    try {
+      const response = await fetch("https://your-backend-api.com/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert("Upload Successful", "Your photo has been uploaded.");
+        console.log("Response from server:", data);
+      } else {
+        console.error("Upload failed:", data);
+        Alert.alert(
+          "Upload Failed",
+          "An error occurred while uploading the photo."
+        );
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert(
+        "Upload Failed",
+        "An error occurred while uploading the photo."
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // const [products, setProducts] = useState([
   //   {
   //     id: "1",
@@ -79,49 +160,29 @@ const ProductTable = () => {
   //   },
   // ]);
 
+  //for manaage-modal
+
   const openModal = (product, index) => {
     setSelectedProductIndex(index);
     setEditedProduct({ ...product });
     setModalVisible(true);
   };
-
   const closeModal = () => {
     setModalVisible(false);
     setSelectedProductIndex(null);
     setEditedProduct({});
   };
-
   const saveChanges = () => {
     const updatedProducts = [...products];
     updatedProducts[selectedProductIndex] = editedProduct;
     setProducts(updatedProducts);
     closeModal();
   };
-
   const handleInputChange = (field, value) => {
     setEditedProduct((prev) => ({ ...prev, [field]: value }));
   };
 
-  const renderProductItem = ({ item, index }) => (
-    <View style={styles.row}>
-      <View style={styles.cell}>
-        <Image
-          source={{ uri: photos[index] }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
-      <Text style={[styles.cell, styles.text]}>{item.name}</Text>
-      <TouchableOpacity
-        className="ms-3 mr-1 my-8"
-        style={[styles.cell, styles.manageButton]}
-        onPress={() => openModal(item, index)}
-      >
-        <Text style={styles.buttonText}>Manage</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
+  //for add-modal
   const setAddProducts = async () => {
     try {
       const response = await fetch(addurl, {
@@ -144,7 +205,6 @@ const ProductTable = () => {
       console.log("Error fetching data", error);
     }
   };
-
   const addNewProduct = () => {
     if (
       !editedProduct.name ||
@@ -159,23 +219,55 @@ const ProductTable = () => {
     console.log("New Product:", editedProduct);
     // Clear the fields after successful addition
     setEditedProduct({});
-    closeModal();
+    closeAddModal();
+  };
+  const closeAddModal = () => {
+    setAddModalVisible(false);
+  };
+
+  //for add-image-modal
+  const openImageModal = () => {
+    setAddImageModalVisible(true);
+  };
+
+  const closeImageModal = () => {
+    setAddImageModalVisible(false);
   };
 
   const renderHeader = () => (
     <View style={styles.headerRow}>
-      <Text style={[styles.headerCell, styles.headerText]}>Photo</Text>
-      <Text style={[styles.headerCell, styles.headerText]}>Name </Text>
+      <Text style={[styles.photoCell, styles.headerText]}>Photo</Text>
+      <Text style={[styles.nameCell, styles.headerText]}>Name </Text>
       <Text style={[styles.headerCell, styles.headerText]}>Action</Text>
     </View>
   );
+  const renderProductItem = ({ item, index }) => (
+    <View style={styles.row}>
+      <View style={styles.photoCell}>
+        <Image
+          source={{ uri: photos[index] }}
+          style={styles.image}
+          resizeMode="contain"
+        />
+      </View>
+      <Text style={[styles.nameCell, styles.text]}>{item.name}</Text>
+      <TouchableOpacity
+        className="ms-3 mr-1 my-8"
+        style={[styles.headerCell, styles.manageButton]}
+        onPress={() => openModal(item, index)}
+      >
+        <Text style={styles.buttonText}>Manage</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.tableHeader}>P R O D U C T S</Text>
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => {
-          setModalVisible(true);
+          setAddModalVisible(true);
           setAddProducts();
         }}
       >
@@ -230,26 +322,31 @@ const ProductTable = () => {
                 }
               })}
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Photo URL:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedProduct.photo}
-                  onChangeText={(value) => handleInputChange("photo", value)}
-                />
+                <Text className="font-bold align-self-center">
+                  Select Photo
+                </Text>
+
+                <TouchableOpacity
+                  className="mx-4 border-2 ms-10 border-blue-700 rounded-3xl"
+                  onPress={openImageModal}
+                >
+                  <Text style={styles.clickText}>CLICK HERE</Text>
+                </TouchableOpacity>
               </View>
+
               <Button title="Save" onPress={saveChanges} />
             </View>
           </View>
         </Modal>
       )}
 
-      {modalVisible && (
+      {addModalVisible && (
         // ADD PRODUCT MODAL SECTION
         <Modal
-          animationType="slide"
+          animationType="fade"
           transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
+          visible={addModalVisible}
+          onRequestClose={closeAddModal}
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
@@ -257,13 +354,16 @@ const ProductTable = () => {
               <Text style={styles.modalHeader}>Add Product</Text>
 
               {/* Close Button */}
-              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <TouchableOpacity
+                onPress={closeAddModal}
+                style={styles.closeButton}
+              >
                 <Text style={styles.closeButtonText}>X</Text>
               </TouchableOpacity>
 
               {/* Input Fields for New Product */}
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Name:</Text>
+                <Text style={styles.inputLabel}>Name</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter product name"
@@ -273,7 +373,7 @@ const ProductTable = () => {
               </View>
 
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Description:</Text>
+                <Text style={styles.inputLabel}>Description</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter product description"
@@ -285,7 +385,7 @@ const ProductTable = () => {
               </View>
 
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Price:</Text>
+                <Text style={styles.inputLabel}>Price</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter product price"
@@ -296,7 +396,7 @@ const ProductTable = () => {
               </View>
 
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Stock:</Text>
+                <Text style={styles.inputLabel}>Stock</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter stock quantity"
@@ -307,7 +407,7 @@ const ProductTable = () => {
               </View>
 
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Category:</Text>
+                <Text style={styles.inputLabel}>Category</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter product category"
@@ -317,17 +417,73 @@ const ProductTable = () => {
               </View>
 
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Photo URL:</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter product photo URL"
-                  value={editedProduct.photo || ""}
-                  onChangeText={(value) => handleInputChange("photo", value)}
-                />
+                <Text className="font-bold align-self-center">
+                  Select Photo
+                </Text>
+
+                <TouchableOpacity
+                  className="mx-4 border-2 ms-10 border-blue-700 rounded-3xl"
+                  onPress={openImageModal}
+                >
+                  <Text style={styles.clickText}>CLICK HERE</Text>
+                </TouchableOpacity>
               </View>
 
               {/* Save Button */}
               <Button title="Add Product" onPress={addNewProduct} />
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {addImageModalVisible && (
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={addImageModalVisible}
+          onRequestClose={closeImageModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeader}>View Your Photo</Text>
+              <TouchableOpacity
+                onPress={closeImageModal}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeButtonText}>X</Text>
+              </TouchableOpacity>
+
+              {/* Show Selected Image */}
+              <View className="flex justify-center items-center">
+                {image && (
+                  <Image
+                    source={{ uri: image }}
+                    style={styles.pickImage}
+                    resizeMode="contain"
+                  />
+                )}
+              </View>
+
+              <TouchableOpacity
+                className="bg-orange-300 my-5 w-2/3 mx-auto rounded-xl"
+                onPress={pickImage}
+              >
+                <Text className="font-bold text-xl text-center py-2">
+                  CHOOSE PHOTO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="bg-green-300 w-2/3 mx-auto rounded-xl"
+                onPress={uploadImage}
+              >
+                <Text className="font-bold text-xl text-center py-2">
+                  UPLOAD PHOTO
+                </Text>
+              </TouchableOpacity>
+
+              {/* Show Loader During Upload */}
+              {uploading && <ActivityIndicator size="large" color="#0000ff" />}
             </View>
           </View>
         </Modal>
@@ -356,7 +512,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerCell: {
-    flex: 1,
+    flex: 1.3,
     textAlign: "center",
   },
   headerText: {
@@ -370,15 +526,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ccc",
   },
-  cell: {
-    flex: 1,
-    textAlign: "center",
-    alignItems: "center",
-  },
   image: {
     width: 80, // Increased width
     height: 80, // Increased height
     borderRadius: 10,
+  },
+  pickImage: {
+    width: 300, // Increased width
+    height: 300, // Increased height
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  photoCell: {
+    flex: 1.7,
+    textAlign: "center",
+  },
+  nameCell: {
+    flex: 2,
+    textAlign: "center",
   },
   text: {
     textAlign: "center",
@@ -386,7 +551,8 @@ const styles = StyleSheet.create({
   },
   manageButton: {
     backgroundColor: "#007BFF",
-    paddingVertical: 15,
+    paddingVertical: 10,
+    marginStart: 20,
     borderRadius: 5,
     alignItems: "center",
   },
@@ -446,6 +612,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  clickText: {
+    color: "blue",
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "bold",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
   closeButton: {
     backgroundColor: "#666666",

@@ -20,7 +20,7 @@ export default function OrderStatus() {
       }
     };
     fetchData();
-  }, []);
+  }, [info]);
 
   const handleToggle = async () => {
     try {
@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
+    marginTop: 10,
     marginBottom: 10,
   },
 });
