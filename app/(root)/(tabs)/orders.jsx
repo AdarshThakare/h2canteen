@@ -48,7 +48,7 @@ const App = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [orders]);
 
   // const orders = [
   //   {
@@ -271,17 +271,29 @@ const App = () => {
       processId;
     if (!selectedOrder) return;
     try {
-      const res = await fetch(
-        processurl,
-        { method: "PUT" },
-        JSON.stringify({
+      const response = await fetch(processurl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           userId: selectedOrder.user._id,
           orderId: selectedOrder.orderItems._id,
-        })
-      );
+        }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        Alert.alert("Success", "Profile updated successfully");
+        console.log(result);
+      } else {
+        Alert.alert("Error", "Something went wrong");
+        console.log(result);
+      }
       fetchData();
     } catch (error) {
-      console.log(error);
+      console.error("Error:", error);
+      Alert.alert("Error", "An error occurred while updating");
     }
   };
 
@@ -378,7 +390,7 @@ const App = () => {
             )}
             <View className="flex flex-row justify-center gap-5">
               <TouchableOpacity
-                onPress={onPrinterPress}
+                onPress={generatePdf}
                 style={styles.downloadButton}
               >
                 <Text style={styles.closeButtonText}>DOWNLOAD</Text>
@@ -411,9 +423,9 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+    backgroundColor: "#f1f1f1",
     paddingVertical: 8,
+    marginTop: 8,
   },
   headerCell: {
     fontSize: 16,

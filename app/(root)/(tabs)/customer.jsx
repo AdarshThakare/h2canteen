@@ -33,55 +33,6 @@ const App = () => {
     };
     fetchData();
   }, []);
-  // {
-  //     id: "1",
-  //     avatar: "https://via.placeholder.com/50",
-  //     name: "Prajyot Tayde",
-  //     gender: "male",
-  //     email: "taydeprajyot@gmail.com",
-  //     role: "admin",
-  //   },
-  //   {
-  //     id: "2",
-  //     avatar: "https://via.placeholder.com/50",
-  //     name: "Prajyot Tayde",
-  //     gender: "male",
-  //     email: "pmtbmt@gmail.com",
-  //     role: "admin",
-  //   },
-  //   {
-  //     id: "3",
-  //     avatar: "https://via.placeholder.com/50",
-  //     name: "Dishant Yadav",
-  //     gender: "male",
-  //     email: "dishantrao11@gmail.com",
-  //     role: "admin",
-  //   },
-  //   {
-  //     id: "4",
-  //     avatar: "https://via.placeholder.com/50",
-  //     name: "Dishant Yadav",
-  //     gender: "female",
-  //     email: "dishantrao11.ecell@gmail.com",
-  //     role: "user",
-  //   },
-  //   {
-  //     id: "5",
-  //     avatar: "https://via.placeholder.com/50",
-  //     name: "Dishant Yadav",
-  //     gender: "male",
-  //     email: "dishantrao11.work@gmail.com",
-  //     role: "user",
-  //   },
-  //   {
-  //     id: "6",
-  //     avatar: "https://via.placeholder.com/50",
-  //     name: "Dishant Yadav",
-  //     gender: "female",
-  //     email: "dishantrao11.code@gmail.com",
-  //     role: "user",
-  //   },
-  // ]);
 
   const deleteCustomer = (id) => {
     Alert.alert(
@@ -123,7 +74,7 @@ const App = () => {
       <View>
         <Text style={styles.header}>C U S T O M E R S</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator>
-          <View>
+          <View className="mt-2">
             {/* Table Header */}
             <View style={styles.tableHeader}>
               <Text style={[styles.headerCell, styles.avatarCell]}>Avatar</Text>
@@ -153,7 +104,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "white",
   },
   header: {
     fontSize: 24,
@@ -163,7 +114,7 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#f1f1f1",
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",

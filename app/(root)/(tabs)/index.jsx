@@ -50,16 +50,28 @@ export default function index() {
       id: "widget1",
       component: (
         <WidgetItem
-          heading="Revenue"
-          value={count.revenue}
-          percent={perc.revenue}
-          color="#0000FF"
+          heading="Today's Revenue"
+          value={count.dailyRevenue}
+          percent={perc.dailyRevenue}
+          color="#00eded"
           amount={true}
         />
       ),
     },
     {
       id: "widget2",
+      component: (
+        <WidgetItem
+          heading="Today's Transaction"
+          value={count.dailyOrders}
+          percent={perc.dailyTransactions}
+          color="#ff5500"
+          amount={true}
+        />
+      ),
+    },
+    {
+      id: "widget3",
       component: (
         <WidgetItem
           heading="Users"
@@ -71,10 +83,22 @@ export default function index() {
       ),
     },
     {
-      id: "widget3",
+      id: "widget4",
       component: (
         <WidgetItem
-          heading="Transactions"
+          heading="Total Revenue"
+          value={count.revenue}
+          percent={perc.revenue}
+          color="#0000FF"
+          amount={true}
+        />
+      ),
+    },
+    {
+      id: "widget5",
+      component: (
+        <WidgetItem
+          heading="Total Transactions"
           value={count.order}
           percent={perc.order}
           color="#FFAA00"
@@ -83,7 +107,7 @@ export default function index() {
       ),
     },
     {
-      id: "widget4",
+      id: "widget6",
       component: (
         <WidgetItem
           heading="Products"

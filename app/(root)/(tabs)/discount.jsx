@@ -224,9 +224,9 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+    backgroundColor: "#f1f1f1",
     paddingVertical: 8,
+    marginTop: 8,
   },
   headerCell: {
     fontSize: 16,

@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { BarChart, StackedBarChart } from "react-native-chart-kit";
-import { Circle, Image } from "react-native-svg";
 import icons from "../constants/icons";
 
 const getLastSixMonths = () => {
