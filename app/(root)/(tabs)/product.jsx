@@ -33,9 +33,9 @@ const ProductTable = () => {
   //ADD PRODUCT MODAL STATES
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     price: "",
     stock: "",
+    description: "",
     category: "",
     photos: [],
   });
@@ -72,8 +72,8 @@ const ProductTable = () => {
       !formData.name ||
       !formData.stock ||
       !formData.price ||
-      !formData.photos ||
       !formData.description ||
+      !formData.photos ||
       !formData.category
     ) {
       Alert.alert("Invalid Input", "All fields are required.");
@@ -83,15 +83,32 @@ const ProductTable = () => {
       ...prev, // Spread the existing fields
       photos: savePhotos, // Append the new photo
     }));
-    console.log(formData);
+
+    console.log(savePhotos);
+
+    const newFormData = new FormData();
+    newFormData.append("name", formData.name);
+    newFormData.append("price", formData.price);
+    newFormData.append("description", formData.description);
+    newFormData.append("stock", formData.stock);
+    newFormData.append("category", formData.category);
+    savePhotos.forEach((photo) => {
+      newFormData.append("photos", {
+        uri: photo.uri,
+        name: photo.name,
+        type: photo.type,
+      });
+    });
+
+    console.log(newFormData);
 
     try {
       const response = await fetch(addurl, {
         method: "POST",
         headers: {
-          Accept: "application/json",
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
+        body: newFormData,
       });
       const data = await response.json();
 
@@ -150,27 +167,8 @@ const ProductTable = () => {
         setPhotos(selectedPhotos);
         setSavePhotos(selectedPhotos);
       }
-      // console.log(result);
-      // setImage(result.assets[0].uri); // Save the image URI
-      // setResult(result.assets[0]);
     }
   };
-
-  function convertToMulterFiles(files) {
-    return files.map((file) => {
-      const timestamp = Date.now(); // Generate a timestamp for unique filenames
-      return {
-        fieldname: "photos", // This is the field name used in the form
-        originalname: file.fileName, // Map fileName to originalname
-        encoding: "7bit", // Default encoding
-        mimetype: file.mimeType, // Map mimeType directly
-        size: file.fileSize, // Map fileSize directly
-        destination: "uploads/", // Define your upload destination folder
-        filename: `${timestamp}_${file.fileName}`, // Generate a unique filename
-        path: `uploads/${timestamp}_${file.fileName}`, // Generate a path based on filename
-      };
-    });
-  }
 
   const renderImage = ({ item }) => (
     <Image source={{ uri: item.uri }} style={styles.corouselImage} />
