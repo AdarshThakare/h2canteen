@@ -14,7 +14,7 @@ export default function OrderStatus() {
         const response = await fetch(url);
         const data = await response.json();
         setInfo(data.orderStatusInfo);
-        console.log(data.orderStatusInfo);
+        console.log("On Mount : ", data.orderStatusInfo);
       } catch (error) {
         console.log("Error fetching data", error);
       }
@@ -34,14 +34,10 @@ export default function OrderStatus() {
           isEnabled: !info,
         }),
       });
-
-      const data = await response.json();
-      setInfo(data.orderStatusInfo);
-      console.log(data.orderStatusInfo);
+      setInfo((prev) => !prev);
     } catch (error) {
       console.log("Error fetching data", error);
     }
-    setInfo((prev) => !prev);
     info
       ? ToastAndroid.show("Order have been Stopped", ToastAndroid.SHORT)
       : ToastAndroid.show("Order will now be Accepted", ToastAndroid.SHORT);
@@ -86,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginTop: 5,
+    marginTop: 10,
     marginBottom: 10,
   },
 });

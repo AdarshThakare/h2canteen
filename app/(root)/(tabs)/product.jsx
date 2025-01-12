@@ -242,8 +242,13 @@ const ProductTable = () => {
         keyExtractor={(item) => item._id}
         renderItem={renderProductItem}
         ListHeaderComponent={renderHeader}
-        // pagingEnabled={true}
-        // initialNumToRender={5}
+        initialNumToRender={5}
+        maxToRenderPerBatch={8}
+        windowSize={2}
+        onEndReached={() => {
+          <ActivityIndicator size="large" color="#0000ff" />;
+        }}
+        onEndReachedThreshold={0.5}
       />
 
       {

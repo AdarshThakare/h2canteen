@@ -18,7 +18,7 @@ const Spacer = ({ height = 10 }) => <View style={{ height }} />;
 
 const App = () => {
   const [users, setUsers] = useState();
-  const [customers, setCustomers] = useState();
+  const [selectedCustomers, setSelectedCustomers] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,9 +45,6 @@ const App = () => {
         },
         {
           text: "Delete",
-          onPress: () => {
-            setUsers(customers.filter((users) => users.id !== id));
-          },
           style: "destructive",
         },
       ]
@@ -63,7 +60,10 @@ const App = () => {
       <Text style={[styles.cell, styles.textCell]}>{item.gender}</Text>
       <Text style={[styles.cell, styles.emailCell]}>{item.email}</Text>
       <Text style={[styles.cell, styles.textCell]}>{item.role}</Text>
-      <TouchableOpacity style={[styles.cell, styles.actionCell]}>
+      <TouchableOpacity
+        style={[styles.cell, styles.actionCell]}
+        onPress={() => deleteCustomer(item._id)}
+      >
         <Image source={icons.deleteIcon} className="size-8" />
       </TouchableOpacity>
     </View>

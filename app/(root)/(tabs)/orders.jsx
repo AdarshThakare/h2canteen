@@ -22,6 +22,7 @@ import {
   BluetoothManager,
   BluetoothEscposPrinter,
 } from "react-native-thermal-printer";
+import { ActivityIndicator } from "react-native-web";
 
 const { width } = Dimensions.get("window");
 
@@ -33,7 +34,6 @@ const App = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [orders, setOrders] = useState([]);
-  const [food, setFood] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,8 +41,6 @@ const App = () => {
         const response = await fetch(url);
         const data = await response.json();
         setOrders(data.orders);
-        const groupedOrderItems = data.orders.map((order) => order.orderItems);
-        setFood(groupedOrderItems);
       } catch (error) {
         console.log("Error fetching data", error);
       }
@@ -196,7 +194,6 @@ const App = () => {
 
   const handleManage = (orders) => {
     setSelectedOrder(orders);
-    // console.log(orders);
     setModalVisible(true);
   };
 
@@ -205,7 +202,16 @@ const App = () => {
       <Text style={[styles.cell, { width: width * 0.4 }]}>
         {item.user.name}
       </Text>
-      <Text style={[styles.cell, { width: width * 0.3, color: "black" }]}>
+      <Text
+        className={
+          item.status === "Delivered"
+            ? "text-purple-600"
+            : item.status === "Shipped"
+            ? "text-green-600"
+            : "text-red-600"
+        }
+        style={[styles.cell, { width: width * 0.3 }]}
+      >
         {item.status}
       </Text>
       <TouchableOpacity
@@ -266,9 +272,8 @@ const App = () => {
 
   const onProcessClick = async (processId) => {
     const processurl =
-      "https://primebay-backend.onrender.com/api/v1/order/app" +
-      "/" +
-      processId;
+      "https://primebay-backend.onrender.com/api/v1/order/app/" + processId;
+
     if (!selectedOrder) return;
     try {
       const response = await fetch(processurl, {
@@ -290,7 +295,12 @@ const App = () => {
         Alert.alert("Error", "Something went wrong");
         console.log(result);
       }
-      fetchData();
+
+      // const response2 = await fetch(processurl);
+      // const data = await response2.json();
+      // setOrders(data.orders);
+      // console.log(selectedOrder.status);
+      // console.log(data.orders);
     } catch (error) {
       console.error("Error:", error);
       Alert.alert("Error", "An error occurred while updating");
@@ -321,6 +331,13 @@ const App = () => {
             renderItem={renderItem}
             keyExtractor={(item) => item._id}
             contentContainerStyle={styles.table}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={2}
+            onEndReached={() => {
+              <ActivityIndicator size="large" color="#0000ff" />;
+            }}
+            onEndReachedThreshold={0.5}
           />
           <Spacer height={60} />
         </View>
@@ -372,12 +389,25 @@ const App = () => {
                   Total : ₹{selectedOrder.total}
                 </Text>
                 <View className="flex flex-row justify-start items-center gap-5">
-                  <Text style={styles.totalText}>
-                    Status: {selectedOrder.status}
-                  </Text>
+                  <View className="flex flex-row justify-start items-center gap-2">
+                    <Text style={styles.totalText}>Status :</Text>
+                    <Text
+                      style={styles.totalText}
+                      className={
+                        selectedOrder.status === "Delivered"
+                          ? "text-purple-500"
+                          : selectedOrder.status === "Shipped"
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }
+                    >
+                      {selectedOrder.status}
+                    </Text>
+                  </View>
                   <TouchableOpacity
                     onPress={() => {
                       onProcessClick(selectedOrder._id);
+                      setModalVisible(false);
                     }}
                   >
                     <Image
