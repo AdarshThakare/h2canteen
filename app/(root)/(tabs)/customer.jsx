@@ -18,7 +18,6 @@ const Spacer = ({ height = 10 }) => <View style={{ height }} />;
 
 const App = () => {
   const [users, setUsers] = useState();
-  const [selectedCustomers, setSelectedCustomers] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +32,21 @@ const App = () => {
     };
     fetchData();
   }, []);
+
+  const onRefreshHandler = () => {
+    const fetchData = async () => {
+      try {
+        console.log("I am running");
+        const response = await fetch(url);
+        const data = await response.json();
+        setUsers(data.users);
+        // console.log(data.products);
+      } catch (error) {
+        console.log("Error fetching the data", error);
+      }
+    };
+    fetchData();
+  };
 
   const deleteCustomer = (id) => {
     Alert.alert(
@@ -60,18 +74,21 @@ const App = () => {
       <Text style={[styles.cell, styles.textCell]}>{item.gender}</Text>
       <Text style={[styles.cell, styles.emailCell]}>{item.email}</Text>
       <Text style={[styles.cell, styles.textCell]}>{item.role}</Text>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.cell, styles.actionCell]}
         onPress={() => deleteCustomer(item._id)}
       >
         <Image source={icons.deleteIcon} className="size-8" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 
   return (
     <View style={styles.container}>
       <View>
+        <TouchableOpacity style={styles.refresh} onPress={onRefreshHandler}>
+          <Image source={icons.refreshIcon} className="size-9" />
+        </TouchableOpacity>
         <Text style={styles.header}>C U S T O M E R S</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator>
           <View className="mt-2">
@@ -82,7 +99,7 @@ const App = () => {
               <Text style={[styles.headerCell, styles.textCell]}>Gender</Text>
               <Text style={[styles.headerCell, styles.emailCell]}>Email</Text>
               <Text style={[styles.headerCell, styles.textCell]}>Role</Text>
-              <Text style={[styles.headerCell, styles.actionCell]}>Action</Text>
+              {/* <Text style={[styles.headerCell, styles.actionCell]}>Action</Text> */}
             </View>
             {/* Table Rows */}
             <FlatList
@@ -159,6 +176,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 20,
     fontWeight: "bold",
+  },
+  refresh: {
+    position: "absolute",
+    top: 2,
+    left: 16,
+    width: 50,
+    height: 50,
   },
 });
 

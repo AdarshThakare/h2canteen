@@ -1,7 +1,16 @@
-import { Text, View, StyleSheet, Switch, ToastAndroid } from "react-native";
+import {
+  Text,
+  View,
+  Image,
+  StyleSheet,
+  Switch,
+  ToastAndroid,
+  TouchableOpacity,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { isEnabled } from "react-native/Libraries/Performance/Systrace";
 
+import icons from "../constants/icons";
 const url =
   "https://primebay-backend.onrender.com/api/v1/dashboard/app/orderStatus";
 
@@ -21,6 +30,22 @@ export default function OrderStatus() {
     };
     fetchData();
   }, [info]);
+
+  const onRefreshHandler = () => {
+    const fetchData = async () => {
+      try {
+        console.log("I am running");
+        const response = await fetch(url);
+        const data = await response.json();
+        setInfo(data.orderStatusInfo);
+
+        // console.log(data.products);
+      } catch (error) {
+        console.log("Error fetching the data", error);
+      }
+    };
+    fetchData();
+  };
 
   const handleToggle = async () => {
     try {
@@ -45,6 +70,12 @@ export default function OrderStatus() {
 
   return (
     <View>
+      <TouchableOpacity style={styles.refresh} onPress={onRefreshHandler}>
+        <Image
+          source={icons.refreshIcon}
+          className="size-9 absolute left-1 top-2"
+        />
+      </TouchableOpacity>
       <Text style={styles.text}>D A S H B O A R D</Text>
       <View className="bg-white flex flex-row items-center justify-between w-full px-6">
         <Text className="font-semibold text-xl">Order Status</Text>
@@ -84,5 +115,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
     marginBottom: 10,
+  },
+  refresh: {
+    position: "absolute",
+    top: 6,
+    left: 20,
+    width: 50,
+    height: 50,
   },
 });

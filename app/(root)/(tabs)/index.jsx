@@ -7,6 +7,7 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import OrderStatus from "../../../components/orderStatus";
 import WidgetItem from "../../../components/widgetItem";

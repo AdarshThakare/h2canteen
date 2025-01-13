@@ -45,6 +45,21 @@ const App = () => {
     fetchData();
   }, [discounts]);
 
+  const onRefreshHandler = () => {
+    const fetchData = async () => {
+      try {
+        console.log("I am running");
+        const response = await fetch(url);
+        const data = await response.json();
+        setDiscounts(data.coupons);
+        // console.log(data.products);
+      } catch (error) {
+        console.log("Error fetching the data", error);
+      }
+    };
+    fetchData();
+  };
+
   const openAddModal = () => {
     setAddModalVisible(true);
   };
@@ -239,6 +254,12 @@ const App = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.refresh} onPress={onRefreshHandler}>
+        <Image
+          source={icons.refreshIcon}
+          className="size-9 absolute left-1 top-1"
+        />
+      </TouchableOpacity>
       <Text style={styles.heading}>D I S C O U N T S</Text>
       <ScrollView horizontal>
         <View>
@@ -435,6 +456,13 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
+  refresh: {
+    position: "absolute",
+    top: 8,
+    left: 20,
+    width: 50,
+    height: 50,
+  },
   container: {
     flex: 1,
     padding: 10,

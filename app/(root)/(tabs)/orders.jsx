@@ -48,6 +48,21 @@ const App = () => {
     fetchData();
   }, [orders]);
 
+  const onRefreshHandler = () => {
+    const fetchData = async () => {
+      try {
+        console.log("I am running");
+        const response = await fetch(url);
+        const data = await response.json();
+        setOrders(data.orders);
+        // console.log(data.products);
+      } catch (error) {
+        console.log("Error fetching the data", error);
+      }
+    };
+    fetchData();
+  };
+
   // const orders = [
   //   {
   //     id: "1",
@@ -309,6 +324,12 @@ const App = () => {
 
   return (
     <View className="w-full h-full bg-white justify-center items-center px-4 pt-3">
+      <TouchableOpacity style={styles.refresh} onPress={onRefreshHandler}>
+        <Image
+          source={icons.refreshIcon}
+          className="size-9 absolute left-1 top-1"
+        />
+      </TouchableOpacity>
       <Text style={styles.heading}>O R D E R S</Text>
       <ScrollView horizontal>
         <View>
@@ -437,6 +458,13 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
+  refresh: {
+    position: "absolute",
+    top: 8,
+    left: 20,
+    width: 50,
+    height: 50,
+  },
   container: {
     flex: 1,
     padding: 16,

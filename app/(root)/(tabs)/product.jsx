@@ -12,14 +12,17 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  ToastAndroid,
 } from "react-native";
 
 import * as ImagePicker from "expo-image-picker";
 import icons from "../../../constants/icons";
+import FastImage from "react-native-fast-image";
 
 const Spacer = ({ height = 10 }) => <View style={{ height }} />;
 
-const geturl = "https://primebay-backend.onrender.com/api/v1/product/latest";
+const geturl =
+  "https://primebay-backend.onrender.com/api/v1/product/app/admin-products";
 const addurl = "https://primebay-backend.onrender.com/api/v1/product/app/new";
 
 const ProductTable = () => {
@@ -28,6 +31,8 @@ const ProductTable = () => {
   const [products, setProducts] = useState([]); //for setting value of each product from api
   const [addModalVisible, setAddModalVisible] = useState(false); //for setting modal visibility for add products
   const [imagePickerVisible, setImagePickerVisible] = useState(false); //for setting visibility of the image-picker and uploader modal
+  const [manageModalVisible, setManageModalVisible] = useState(false); //for setting visibility of the manage product modal
+  const [preManageModalVisible, setPreManageModalVisible] = useState(false);
   const [viewImageVisible, setViewImageVisible] = useState(false);
   const [zoomdImageUri, setZoomedImageUri] = useState("");
   //ADD PRODUCT MODAL STATES
@@ -40,6 +45,17 @@ const ProductTable = () => {
     photos: [],
   });
   const [savePhotos, setSavePhotos] = useState([]); //Array to store the selected photos outside view modal for sending post request
+  const [updateFormData, setUpdateFormData] = useState({
+    name: "",
+    price: "",
+    stock: "",
+    description: "",
+    category: "",
+    photos: [],
+  });
+  const [selectedProduct, setSelectedProduct] = useState([]);
+  const [updateId, setUpdateId] = useState("");
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   //GET REQUEST
   useEffect(() => {
@@ -57,6 +73,21 @@ const ProductTable = () => {
     fetchData();
   }, [products]);
 
+  const onRefreshHandler = () => {
+    const fetchData = async () => {
+      try {
+        console.log("I am running");
+        const response = await fetch(geturl);
+        const data = await response.json();
+        setProducts(data.products);
+        // console.log(data.products);
+      } catch (error) {
+        console.log("Error fetching the data", error);
+      }
+    };
+    fetchData();
+  };
+
   // + Modal Section
   const openAddModal = () => {
     setAddModalVisible(true);
@@ -66,6 +97,13 @@ const ProductTable = () => {
     setAddModalVisible(false);
   };
 
+  const openDeleteModal = () => {
+    setDeleteModalVisible(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalVisible(false);
+  };
   //sending the post request with the right data
   const addProductHandler = async () => {
     if (
@@ -113,7 +151,7 @@ const ProductTable = () => {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert("Upload Successful", `Response: ${JSON.stringify(data)}`);
+        Alert.alert("Upload Successful", `Response: Item added successfully.`);
       } else {
         Alert.alert("Upload Failed", "Something went wrong.");
         console.error("Server error:", data);
@@ -128,6 +166,9 @@ const ProductTable = () => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  const inputUpdateChangeHandler = (key, value) => {
+    setUpdateFormData((prev) => ({ ...prev, [key]: value }));
+  };
   //IMAGE PICKER SECTION
   const openImageModal = () => {
     setImagePickerVisible(true);
@@ -170,6 +211,24 @@ const ProductTable = () => {
     }
   };
 
+  const deleteProductHandler = async (id) => {
+    try {
+      const delUrl =
+        "https://primebay-backend.onrender.com/api/v1/product/app/" + id;
+      const response = await fetch(delUrl, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (response.ok) {
+        ToastAndroid.show("Product deleted successfully!", ToastAndroid.SHORT);
+      } else {
+        ToastAndroid.show("Failed to delete product.", ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   const renderImage = ({ item }) => (
     <Image source={{ uri: item.uri }} style={styles.corouselImage} />
   );
@@ -195,12 +254,102 @@ const ProductTable = () => {
     setViewImageVisible(false);
   };
 
+  //MANAGE PRODUCT MODAL SECTION
+  const openManageModal = (item) => {
+    setManageModalVisible(true);
+    setSelectedProduct(item);
+  };
+
+  const closeManageModal = () => {
+    setManageModalVisible(false);
+  };
+
+  const closePreManageModal = () => {
+    setPreManageModalVisible(false);
+  };
+
+  const openPreManageModal = () => {
+    setPreManageModalVisible(true);
+  };
+
+  const handleSelect = (item) => {
+    setSelectedProduct(item);
+    setUpdateFormData({
+      name: item.name,
+      price: item.price,
+      stock: item.stock,
+      description: item.description,
+      category: item.category,
+      photos: item.photos,
+    });
+    console.log("Selected Product : ", selectedProduct);
+    console.log("Updated Product : ", updateFormData);
+  };
+
+  const onSaveHandler = async () => {
+    console.log("Selected Product : ", selectedProduct);
+    if (
+      !updateFormData.name ||
+      !updateFormData.stock ||
+      !updateFormData.price ||
+      !updateFormData.description ||
+      !updateFormData.photos ||
+      !updateFormData.category
+    ) {
+      Alert.alert("Invalid Input", "All fields are required.");
+      return;
+    }
+    setUpdateFormData((prev) => ({
+      ...prev, // Spread the existing fields
+      photos: savePhotos, // Append the new photo
+    }));
+
+    const newFormData = new FormData();
+    newFormData.append("name", updateFormData.name);
+    newFormData.append("price", updateFormData.price);
+    newFormData.append("description", updateFormData.description);
+    newFormData.append("stock", updateFormData.stock);
+    newFormData.append("category", updateFormData.category);
+    savePhotos.forEach((photo) => {
+      newFormData.append("photos", {
+        uri: photo.uri,
+        name: photo.name,
+        type: photo.type,
+      });
+    });
+
+    console.log(newFormData);
+    // const updateUrl =
+    //   "https://primebay-backend.onrender.com/api/v1/product/app/" + "";
+    // try {
+    //   const response = await fetch(addurl, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //     body: newFormData,
+    //   });
+    //   const data = await response.json();
+
+    //   if (response.ok) {
+    //     Alert.alert("Upload Successful", `Response: Item Updated Successfully`);
+    //   } else {
+    //     Alert.alert("Upload Failed", "Something went wrong.");
+    //     console.error("Server error:", data);
+    //   }
+    // } catch (error) {
+    //   console.error("Error uploading data:", error);
+    //   Alert.alert("Error", "Failed to upload data.");
+    // }
+  };
+
   //Item Rendering section
   const renderHeader = () => (
     <View style={styles.headerRow}>
       <Text style={[styles.photoCell, styles.headerText]}>Photo</Text>
       <Text style={[styles.nameCell, styles.headerText]}>Name </Text>
-      <Text style={[styles.headerCell, styles.headerText]}>Action</Text>
+      <Text style={[styles.headerCell, styles.headerText]}>Price</Text>
+      <Text style={[styles.headerCell, styles.headerText]}>Bin</Text>
     </View>
   );
   const renderProductItem = ({ item, index }) => (
@@ -213,23 +362,90 @@ const ProductTable = () => {
         }}
       >
         <Image
-          source={{ uri: item.photos[0].url }}
+          source={{
+            uri: item.photos[0].url,
+          }}
           style={styles.image}
           resizeMode="contain"
         />
       </TouchableOpacity>
       <Text style={[styles.nameCell, styles.text]}>{item.name}</Text>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         className="ms-3 mr-1 my-8"
         style={[styles.headerCell, styles.manageButton]}
+        onPress={() => {
+          handleSelect(item);
+          openPreManageModal();
+        }}
       >
         <Text style={styles.buttonText}>Manage</Text>
+      </TouchableOpacity> */}
+      <Text style={[styles.nameCell, styles.text]}>Rs. {item.price}</Text>
+      <TouchableOpacity
+        onPress={() => {
+          handleSelect(item);
+          openDeleteModal();
+        }}
+      >
+        <Image source={icons.deleteIcon} className="size-8" />
       </TouchableOpacity>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={preManageModalVisible}
+        closeRequest={closePreManageModal}
+      >
+        <View style={styles.modalContainerA}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalHeader}>Are You Sure?</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={closePreManageModal}
+            >
+              <Text style={styles.closeButtonText}>X</Text>
+            </TouchableOpacity>
+            <View className="flex justify-center items-center">
+              <Text className="text-center text-lg px-5 py-3">
+                Contents of the product you selected will be overwritten. Please
+                press 'Proceed' to update the values for this product!
+              </Text>
+            </View>
+            <View className="flex flex-row justify-center gap-6 items-center py-3">
+              <TouchableOpacity
+                className="bg-gray-200 mt-3 px-5 py-1 rounded-xl"
+                onPress={closePreManageModal}
+              >
+                <Text className="font-bold text-xl text-center py-2">
+                  CANCEL
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="bg-green-500 mt-3 px-5 py-1 rounded-xl"
+                onPress={() => {
+                  handleSelect(item);
+                  closePreManageModal();
+                  openManageModal(item);
+                }}
+              >
+                <Text className="font-bold text-white text-xl text-center py-2">
+                  PROCEED
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.refresh} onPress={onRefreshHandler}>
+        <Image
+          source={icons.refreshIcon}
+          className="size-9 absolute left-3 top-2"
+        />
+      </TouchableOpacity>
       <Text style={styles.tableHeader}>P R O D U C T S</Text>
       <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
         <Text style={styles.addButtonText}>+</Text>
@@ -241,8 +457,8 @@ const ProductTable = () => {
         renderItem={renderProductItem}
         ListHeaderComponent={renderHeader}
         initialNumToRender={5}
-        maxToRenderPerBatch={8}
-        windowSize={2}
+        maxToRenderPerBatch={10}
+        windowSize={4}
         onEndReached={() => {
           <ActivityIndicator size="large" color="#0000ff" />;
         }}
@@ -269,7 +485,9 @@ const ProductTable = () => {
               <View className="flex justify-center items-center">
                 {
                   <Image
-                    source={{ uri: zoomdImageUri }}
+                    source={{
+                      uri: zoomdImageUri,
+                    }}
                     style={styles.viewImage}
                     resizeMode="contain"
                   />
@@ -281,49 +499,149 @@ const ProductTable = () => {
       }
 
       {
-        // // MANAGE MODEL SECTION
-        // <Modal animationType="slide" transparent={true}>
-        //   <View style={styles.modalContainer}>
-        //     <View style={styles.modalContent}>
-        //       <TouchableOpacity>
-        //         <Image source={icons.deleteIcon} className="size-8 absolute" />
-        //       </TouchableOpacity>
-        //       <Text style={styles.modalHeader}>Manage Product</Text>
-        //       <TouchableOpacity style={styles.closeButton}>
-        //         <Text style={styles.closeButtonText}>X</Text>
-        //       </TouchableOpacity>
-        //       {/* {Object.keys().map((key) => {
-        //         //Marker
-        //         if (
-        //           key === " ||
-        //           key === "description" ||
-        //           key === "price" ||
-        //           key === "stock" ||
-        //           key === "category" ||
-        //           key === "photos.url"
-        //         ) {
-        //           return (
-        //             <View key={key} style={styles.inputRow}>
-        //               <Text style={styles.inputLabel}>{key}</Text>
-        //               <TextInput
-        //                 style={styles.input}
-        //                 value={String([key])}
-        //               />
-        //             </View>
-        //           );
-        //         } */}
-        //       <View style={styles.inputRow}>
-        //         <Text className="font-bold align-self-center">
-        //           Select Photo
-        //         </Text>
-        //         <TouchableOpacity className="mx-4 border-2 ms-10 border-blue-700 rounded-3xl">
-        //           <Text style={styles.clickText}>CLICK HERE</Text>
-        //         </TouchableOpacity>
-        //       </View>
-        //       <Button title="Save" />
-        //     </View>
-        //   </View>
-        // </Modal>
+        // Discount Modal
+        selectedProduct && (
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={deleteModalVisible}
+            onRequestClose={closeDeleteModal}
+          >
+            <View style={styles.modalContainerA}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalHeader}>Are You Sure?</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={closeDeleteModal}
+                >
+                  <Text style={styles.closeButtonText}>X</Text>
+                </TouchableOpacity>
+                <View className="flex justify-center items-center">
+                  <Text className="text-center text-lg px-5 py-3">
+                    Do you really want to delete the current discount? Press
+                    'Proceed' to continue to delete!
+                  </Text>
+                </View>
+                <View className="flex flex-row justify-center gap-6 items-center py-3">
+                  <TouchableOpacity
+                    className="bg-gray-200 mt-3 px-5 py-1 rounded-xl"
+                    onPress={closeDeleteModal}
+                  >
+                    <Text className="font-bold text-xl text-center py-2">
+                      CANCEL
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-red-500 mt-3 px-5 py-1 rounded-xl"
+                    onPress={() => {
+                      handleSelect(selectedProduct);
+                      deleteProductHandler(selectedProduct._id);
+                      closeDeleteModal();
+                    }}
+                  >
+                    <Text className="font-bold text-white text-xl text-center py-2">
+                      PROCEED
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )
+      }
+
+      {
+        // MANAGE MODEL SECTION
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={manageModalVisible}
+          onRequestClose={closeManageModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity>
+                <Image source={icons.deleteIcon} className="size-8 absolute" />
+              </TouchableOpacity>
+              <Text style={styles.modalHeader}>Manage Product</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeManageModal}
+              >
+                <Text style={styles.closeButtonText}>X</Text>
+              </TouchableOpacity>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter product name"
+                  value={updateFormData.name}
+                  onChangeText={(text) => {
+                    inputUpdateChangeHandler("name", text);
+                  }}
+                />
+              </View>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Description</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter product description"
+                  value={updateFormData.description}
+                  onChangeText={(text) => {
+                    inputUpdateChangeHandler("description", text);
+                  }}
+                />
+              </View>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Price</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter product price"
+                  keyboardType="numeric"
+                  value={updateFormData.price.toString()}
+                  onChangeText={(text) => {
+                    inputUpdateChangeHandler("price", text);
+                  }}
+                />
+              </View>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Stock</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter stock quantity"
+                  keyboardType="numeric"
+                  value={updateFormData.stock.toString()}
+                  onChangeText={(text) => {
+                    inputUpdateChangeHandler("stock", text);
+                  }}
+                />
+              </View>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Category</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter product category"
+                  value={updateFormData.category}
+                  onChangeText={(text) => {
+                    inputUpdateChangeHandler("category", text);
+                  }}
+                />
+              </View>
+              <View style={styles.inputRow}>
+                <Text className="font-bold align-self-center">
+                  Select Photo
+                </Text>
+                <TouchableOpacity
+                  className="mx-4 border-2 ms-10 border-blue-700 rounded-3xl"
+                  onPress={openImageModal}
+                >
+                  <Text style={styles.clickText}>CLICK HERE</Text>
+                </TouchableOpacity>
+              </View>
+              <Button title="Save" onPress={onSaveHandler} />
+            </View>
+          </View>
+        </Modal>
       }
 
       {
@@ -485,6 +803,12 @@ const ProductTable = () => {
 };
 
 const styles = StyleSheet.create({
+  modalContainerA: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
   container: {
     flex: 1,
     padding: 10,
@@ -502,7 +826,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerCell: {
-    flex: 1.3,
+    flex: 1,
     textAlign: "center",
   },
   headerText: {
@@ -611,6 +935,13 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 28,
     elevation: 5,
+  },
+  refresh: {
+    position: "absolute",
+    top: 3,
+    left: 16,
+    width: 50,
+    height: 50,
   },
   addButtonText: {
     color: "white",
