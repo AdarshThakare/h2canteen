@@ -8,6 +8,8 @@ import {
   Image,
   FlatList,
   ScrollView,
+  Modal,
+  ToastAndroid,
 } from "react-native";
 
 import icons from "../../../constants/icons";
@@ -18,6 +20,8 @@ const Spacer = ({ height = 10 }) => <View style={{ height }} />;
 
 const App = () => {
   const [users, setUsers] = useState();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,13 +29,20 @@ const App = () => {
         const response = await fetch(url);
         const data = await response.json();
         setUsers(data.users);
-        // console.log(photoUrls)
       } catch (error) {
         console.log("Error fetching data", error);
       }
     };
     fetchData();
-  }, []);
+  }, [users]);
+
+  const openDeleteModal = () => {
+    setDeleteModalVisible(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalVisible(false);
+  };
 
   const onRefreshHandler = () => {
     const fetchData = async () => {
@@ -48,21 +59,27 @@ const App = () => {
     fetchData();
   };
 
-  const deleteCustomer = (id) => {
-    Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this user?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-        },
-      ]
-    );
+  const deleteUserHandler = async (id) => {
+    try {
+      const delUrl =
+        "https://primebay-backend.onrender.com/api/v1/user/app/" + id;
+      const response = await fetch(delUrl, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (response.ok) {
+        ToastAndroid.show("User deleted successfully!", ToastAndroid.SHORT);
+      } else {
+        ToastAndroid.show("Failed to delete user.", ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleSelect = (user) => {
+    setSelectedUser(user);
+    console.log("Selected Discount: ", selectedUser);
   };
 
   const renderRow = ({ item, index }) => (
@@ -76,7 +93,10 @@ const App = () => {
       <Text style={[styles.cell, styles.textCell]}>{item.role}</Text>
       {/* <TouchableOpacity
         style={[styles.cell, styles.actionCell]}
-        onPress={() => deleteCustomer(item._id)}
+        onPress={() => {
+          handleSelect(item);
+          openDeleteModal();
+        }}
       >
         <Image source={icons.deleteIcon} className="size-8" />
       </TouchableOpacity> */}
@@ -111,6 +131,60 @@ const App = () => {
             />
           </View>
         </ScrollView>
+        {
+          // Discount Modal
+          selectedUser && (
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={deleteModalVisible}
+              onRequestClose={closeDeleteModal}
+            >
+              <View style={styles.modalContainerA}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalHeader}>Are You Sure?</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={closeDeleteModal}
+                  >
+                    <Text style={styles.closeButtonText}>X</Text>
+                  </TouchableOpacity>
+                  <View className="flex justify-center items-center">
+                    <Text className="text-center text-lg px-5 py-3">
+                      Do you really want to delete the current user? Press
+                      'Proceed' to continue to delete.
+                    </Text>
+                    <Text className="text-center text-lg px-5 py-3">
+                      This Action CANNOT be Undone.
+                    </Text>
+                  </View>
+                  <View className="flex flex-row justify-center gap-6 items-center py-3">
+                    <TouchableOpacity
+                      className="bg-gray-200 mt-3 px-5 py-1 rounded-xl"
+                      onPress={closeDeleteModal}
+                    >
+                      <Text className="font-bold text-xl text-center py-2">
+                        CANCEL
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="bg-red-500 mt-3 px-5 py-1 rounded-xl"
+                      onPress={() => {
+                        handleSelect(selectedUser);
+                        deleteUserHandler(selectedUser._id);
+                        closeDeleteModal();
+                      }}
+                    >
+                      <Text className="font-bold text-white text-xl text-center py-2">
+                        PROCEED
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          )
+        }
       </View>
       <Spacer height={60} />
     </View>
@@ -156,7 +230,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   avatarCell: {
-    width: 70,
+    width: 80,
   },
   textCell: {
     width: 100,
@@ -183,6 +257,70 @@ const styles = StyleSheet.create({
     left: 16,
     width: 50,
     height: 50,
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  headerRow: {
+    flexDirection: "row",
+    backgroundColor: "#f1f1f1",
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  headerCell: {
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingHorizontal: 8,
+    textAlign: "center",
+  },
+  modalContainerA: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(26, 26, 26, 0.18)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 10,
+    width: "92%",
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "90%",
+    backgroundColor: "white",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  closeButton: {
+    backgroundColor: "#666666",
+    width: 30,
+    height: 30,
+    borderRadius: 28,
+    justifyContent: "center",
+    position: "absolute",
+    top: 13,
+    right: 13,
   },
 });
 

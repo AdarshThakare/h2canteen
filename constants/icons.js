@@ -7,9 +7,7 @@ import bluecircle from "../assets/icons/blue.png";
 import orangecircle from "../assets/icons/orange.png";
 import deleteIcon from "../assets/icons/delete.png";
 import processStatus from "../assets/icons/process.png";
-import logo from "../assets/icons/logo.png";
 import refreshIcon from "../assets/icons/refresh.png";
-import h2 from "../assets/icons/h2icon.png";
 
 export default {
   dashboard,
@@ -20,8 +18,6 @@ export default {
   bluecircle,
   orangecircle,
   deleteIcon,
-  logo,
   processStatus,
   refreshIcon,
-  h2,
 };

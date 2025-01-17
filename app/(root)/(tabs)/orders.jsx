@@ -119,7 +119,7 @@ const App = () => {
           "[C] <u><font size='big'>ORDER N'845</font></u>\n" +
           "[L]\n" +
           "[C] =================================== " +
-          "[L] <b>TRIAL RECEPIT</b>\n" +
+          "[L] <b>TRIAL RECEIPT</b>\n" +
           "[L]\n" +
           "[L]\n",
       });
@@ -240,37 +240,45 @@ const App = () => {
 
   const html = `<html>
   <body>
-  <h2 style="text-align : center">H2-CANTEEN</h2>
-  <p style="text-align: center">------------------------------------------------</p>
-  <p style="text-align : center">ORDER NAME: ${selectedOrder?.user.name}</p>
-  <p style="text-align : center">PHONE NUMBER: ${
+  <h2 style="text-align : center; margin-left : 160px">H2-CANTEEN</h2>
+  <p style="text-align: center; margin-left : 160px">------------------------------------------------</p>
+  <p style="text-align : center; margin-left : 160px">ORDER NAME: ${
+    selectedOrder?.user.name
+  }</p>
+  <p style="text-align : center; margin-left : 160px">PHONE NUMBER: ${
     selectedOrder?.shippingInfo.phone
   }</p>
-  <p style="text-align : center">LOCATION: ${
+  <p style="text-align : center; margin-left : 160px">LOCATION: ${
     selectedOrder?.shippingInfo.city
   }, ${selectedOrder?.shippingInfo.state} - ${
     selectedOrder?.shippingInfo.pinCode
   }</p>
   <br>
-  <p style="text-align : center">---==<< ITEMS ORDERED >>==---</p>
+  <p style="text-align : center; margin-left : 160px">---==<< ITEMS ORDERED >>==---</p>
         ${selectedOrder?.orderItems
           .map(
             (item) =>
-              `<p style="text-align : center">- ${item.name} x ${item.quantity} = ₹${item.price}</p>`
+              `<p style="text-align : center; margin-left : 160px">- ${item.name} x ${item.quantity} = ₹${item.price}</p>`
           )
           .join("")}
-  <p style="text-align : center"Sub Total : ₹${selectedOrder?.subTotal}</p>
+  <p style="text-align : center; margin-left : 160px"Sub Total : ₹${
+    selectedOrder?.subTotal
+  }</p>
   <br>
-  <p style="text-align : center">SHIPPING CHARGES: ${
+  <p style="text-align : center; margin-left : 160px">SHIPPING CHARGES: ${
     selectedOrder?.shippingCharges
   }</p>
-  <p style="text-align : center">TAX AMOUNT: ${selectedOrder?.tax}</p>
-  <p style="text-align : center">DISCOUNT: ${selectedOrder?.discount}</p>
+  <p style="text-align : center; margin-left : 160px">TAX AMOUNT: ${
+    selectedOrder?.tax
+  }</p>
+  <p style="text-align : center; margin-left : 160px">DISCOUNT: ${
+    selectedOrder?.discount
+  }</p>
   <br>
-  <p style="text-align : center ; font-weight : bold">TOTAL : ${
+  <p style="text-align : center ; font-weight : bold; margin-left : 160px">TOTAL : ${
     selectedOrder?.total
   }</p>
-  <p style="text-align : center ; font-weight : bold">STATUS: ${
+  <p style="text-align : center ; font-weight : bold; margin-left : 160px">STATUS: ${
     selectedOrder?.status
   }</p>
   </body>
@@ -439,15 +447,12 @@ const App = () => {
                 </View>
               </View>
             )}
-            <View className="flex flex-row justify-center gap-5">
+            <View className="flex flex-row justify-center">
               <TouchableOpacity
                 onPress={generatePdf}
                 style={styles.downloadButton}
               >
-                <Text style={styles.closeButtonText}>DOWNLOAD</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={printBill} style={styles.printButton}>
-                <Text style={styles.closeButtonText}>PRINT</Text>
+                <Text style={styles.closeButtonText}>DOWNLOAD/PRINT</Text>
               </TouchableOpacity>
             </View>
           </View>

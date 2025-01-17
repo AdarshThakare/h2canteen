@@ -4,7 +4,7 @@
     "slug": "h2canteen",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icons/h2icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "h2canteen",
     "newArchEnabled": true,
     "userInterfaceStyle": "automatic",
@@ -13,25 +13,24 @@
       "bundleIdentifier": "com.adarshthakare.h2canteen"
     },
     "android": {
-      "package": "com.adarshthakare.h2canteen",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/h2icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 1
+      "package": "com.adarshthakare.h2canteen"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icons/logo.png",
-          "imageWidth": 240,
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 300,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

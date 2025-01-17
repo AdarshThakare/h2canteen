@@ -56,6 +56,7 @@ const ProductTable = () => {
   const [selectedProduct, setSelectedProduct] = useState([]);
   const [updateId, setUpdateId] = useState("");
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [image, setImage] = useState([]);
 
   //GET REQUEST
   useEffect(() => {
@@ -65,13 +66,16 @@ const ProductTable = () => {
         const response = await fetch(geturl);
         const data = await response.json();
         setProducts(data.products);
+        const photoUrls = products.map((products) => products.photos[0]?.url);
+        setImage(photoUrls);
+
         // console.log(data.products);
       } catch (error) {
         console.log("Error fetching the data", error);
       }
     };
     fetchData();
-  }, [products]);
+  }, [products, image]);
 
   const onRefreshHandler = () => {
     const fetchData = async () => {
@@ -358,12 +362,13 @@ const ProductTable = () => {
         style={styles.photoCell}
         onPress={() => {
           openViewImageModal();
-          setZoomedImageUri(item.photos[0].url);
+          setZoomedImageUri(image[index]);
         }}
       >
         <Image
           source={{
-            uri: item.photos[0].url,
+            // uri: item.photos[0].url,
+            uri: image[index],
           }}
           style={styles.image}
           resizeMode="contain"
